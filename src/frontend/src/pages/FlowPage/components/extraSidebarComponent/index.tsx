@@ -31,7 +31,6 @@ export default function ExtraSidebar(): JSX.Element {
   const templates = useTypesStore((state) => state.templates);
   const getFilterEdge = useFlowStore((state) => state.getFilterEdge);
   const setFilterEdge = useFlowStore((state) => state.setFilterEdge);
-  const uploadFlow = useFlowsManagerStore((state) => state.uploadFlow);
   const currentFlow = useFlowsManagerStore((state) => state.currentFlow);
   const hasStore = useStoreStore((state) => state.hasStore);
   const hasApiKey = useStoreStore((state) => state.hasApiKey);
@@ -200,7 +199,7 @@ export default function ExtraSidebar(): JSX.Element {
           className={classNames(
             "extra-side-bar-buttons gap-[4px] text-sm font-semibold",
             !hasApiKey || !validApiKey || !hasStore
-              ? "button-disable  cursor-default text-muted-foreground"
+              ? "button-disable cursor-default text-muted-foreground"
               : "",
           )}
         >
@@ -263,7 +262,7 @@ export default function ExtraSidebar(): JSX.Element {
           }}
         />
         <div
-          className="search-icon "
+          className="search-icon"
           onClick={() => {
             if (search) {
               setFilterData(data);

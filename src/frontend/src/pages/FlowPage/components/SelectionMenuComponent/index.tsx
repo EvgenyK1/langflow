@@ -58,14 +58,14 @@ export default function SelectionMenu({
         <div
           className={
             "duration-400 h-10 w-24 rounded-md border border-indigo-300 bg-background px-2.5 text-primary shadow-inner transition-all ease-in-out" +
-            (isTransitioning ? " opacity-100" : " opacity-0 ")
+            (isTransitioning ? " opacity-100" : " opacity-0")
           }
         >
           <button
             className={`${
               disable
                 ? "flex h-full w-full cursor-not-allowed items-center justify-between text-sm text-muted-foreground"
-                : "flex h-full w-full items-center justify-between text-sm hover:text-indigo-500"
+                : "flex h-full w-full items-center justify-between text-sm"
             }`}
             onClick={onClick}
             disabled={disable}

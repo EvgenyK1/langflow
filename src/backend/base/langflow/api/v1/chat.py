@@ -22,6 +22,7 @@ from langflow.api.v1.schemas import (
     VertexBuildResponse,
     VerticesOrderResponse,
 )
+from langflow.schema.schema import Log
 from langflow.services.auth.utils import get_current_active_user
 from langflow.services.chat.service import ChatService
 from langflow.services.deps import get_chat_service, get_session, get_session_service
@@ -123,6 +124,7 @@ async def build_vertex(
     vertex_id: str,
     background_tasks: BackgroundTasks,
     inputs: Annotated[Optional[InputValueRequest], Body(embed=True)] = None,
+    files: Optional[list[str]] = None,
     chat_service: "ChatService" = Depends(get_chat_service),
     current_user=Depends(get_current_active_user),
 ):
@@ -159,6 +161,7 @@ async def build_vertex(
         else:
             graph = cache.get("result")
         vertex = graph.get_vertex(vertex_id)
+
         try:
             lock = chat_service._cache_locks[flow_id_str]
             (
@@ -175,18 +178,24 @@ async def build_vertex(
                 vertex_id=vertex_id,
                 user_id=current_user.id,
                 inputs_dict=inputs.model_dump() if inputs else {},
+                files=files,
             )
+            log_obj = Log(message=vertex.artifacts_raw, type=vertex.artifacts_type)
             result_data_response = ResultDataResponse(**result_dict.model_dump())
 
         except Exception as exc:
-            logger.exception(f"Error building vertex: {exc}")
+            logger.exception(f"Error building Component: {exc}")
             params = format_exception_message(exc)
             valid = False
+            log_obj = Log(message=params, type="error")
             result_data_response = ResultDataResponse(results={})
             artifacts = {}
             # If there's an error building the vertex
             # we need to clear the cache
             await chat_service.clear_cache(flow_id_str)
+
+        result_data_response.message = artifacts
+        result_data_response.logs.append(log_obj)
 
         # Log the vertex build
         if not vertex.will_stream:
@@ -229,7 +238,7 @@ async def build_vertex(
         )
         return build_response
     except Exception as exc:
-        logger.error(f"Error building vertex: {exc}")
+        logger.error(f"Error building Component: {exc}")
         logger.exception(exc)
         message = parse_exception(exc)
         raise HTTPException(status_code=500, detail=message) from exc
@@ -324,7 +333,7 @@ async def build_vertex_stream(
                     raise ValueError(f"No result found for vertex {vertex_id}")
 
             except Exception as exc:
-                logger.exception(f"Error building vertex: {exc}")
+                logger.exception(f"Error building Component: {exc}")
                 exc_message = parse_exception(exc)
                 if exc_message == "The message must be an iterator or an async iterator.":
                     exc_message = "This stream has already been closed."
@@ -335,4 +344,4 @@ async def build_vertex_stream(
 
         return StreamingResponse(stream_vertex(), media_type="text/event-stream")
     except Exception as exc:
-        raise HTTPException(status_code=500, detail="Error building vertex") from exc
+        raise HTTPException(status_code=500, detail="Error building Component") from exc
