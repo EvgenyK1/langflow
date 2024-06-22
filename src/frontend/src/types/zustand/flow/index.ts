@@ -33,7 +33,7 @@ export type FlowPoolObjectTypeNew = {
   timestamp: string;
   valid: boolean;
   data: {
-    logs?: any | ChatOutputType | ChatInputType;
+    outputs?: any | ChatOutputType | ChatInputType;
     results: any | ChatOutputType | ChatInputType;
   };
   duration?: string;
@@ -124,7 +124,9 @@ export type FlowStoreType = {
     input_value,
     files,
     silent,
+    setLockChat,
   }: {
+    setLockChat?: (lock: boolean) => void;
     startNodeId?: string;
     stopNodeId?: string;
     input_value?: string;

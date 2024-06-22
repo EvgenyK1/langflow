@@ -49,7 +49,7 @@ test("CRUD folders", async ({ page }) => {
 
   await page.getByText("Delete").last().click();
   await page.waitForTimeout(1000);
-  await page.getByText("Folder deleted succefully").isVisible();
+  await page.getByText("Folder deleted successfully").isVisible();
 });
 
 test("add folder by drag and drop", async ({ page }) => {

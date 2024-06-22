@@ -427,12 +427,14 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
     input_value,
     files,
     silent,
+    setLockChat,
   }: {
     startNodeId?: string;
     stopNodeId?: string;
     input_value?: string;
     files?: string[];
     silent?: boolean;
+    setLockChat?: (lock: boolean) => void;
   }) => {
     get().setIsBuilding(true);
     const currentFlow = useFlowsManagerStore.getState().currentFlow;
@@ -507,6 +509,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
           runId: runId,
           verticesToRun: get().verticesBuild!.verticesToRun,
         });
+
         get().updateBuildStatus(top_level_vertices, BuildStatus.TO_BUILD);
       }
 
@@ -520,6 +523,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
       const verticesIds = get().verticesBuild?.verticesIds;
       const newFlowBuildStatus = { ...get().flowBuildStatus };
       // filter out the vertices that are not status
+
       const verticesToUpdate = verticesIds?.filter(
         (id) => newFlowBuildStatus[id]?.status !== BuildStatus.BUILT,
       );
@@ -534,6 +538,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
       flowId: currentFlow!.id,
       startNodeId,
       stopNodeId,
+      setLockChat,
       onGetOrderSuccess: () => {
         if (!silent) {
           setNoticeData({ title: "Running components" });
@@ -542,15 +547,15 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
       onBuildComplete: (allNodesValid) => {
         const nodeId = startNodeId || stopNodeId;
         if (!silent) {
-          if (nodeId && allNodesValid) {
+          if (allNodesValid) {
             setSuccessData({
-              title: `${
-                get().nodes.find((node) => node.id === nodeId)?.data.node
-                  ?.display_name
-              } built successfully`,
+              title: nodeId
+                ? `${
+                    get().nodes.find((node) => node.id === nodeId)?.data.node
+                      ?.display_name
+                  } built successfully`
+                : FLOW_BUILD_SUCCESS_ALERT,
             });
-          } else {
-            setSuccessData({ title: FLOW_BUILD_SUCCESS_ALERT });
           }
         }
         get().setIsBuilding(false);
@@ -641,6 +646,7 @@ const useFlowStore = create<FlowStoreType>((set, get) => ({
         newFlowBuildStatus[id].status = BuildStatus.BUILT;
       }
     });
+    set({ flowBuildStatus: newFlowBuildStatus });
   },
 }));
 

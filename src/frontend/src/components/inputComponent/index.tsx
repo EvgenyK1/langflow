@@ -24,7 +24,6 @@ export default function InputComponent({
   blurOnEnter = false,
   optionsIcon = "ChevronsUpDown",
   selectedOption,
-
   setSelectedOption,
   selectedOptions = [],
   setSelectedOptions,

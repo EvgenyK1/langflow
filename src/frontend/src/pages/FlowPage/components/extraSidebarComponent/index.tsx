@@ -293,7 +293,7 @@ export default function ExtraSidebar(): JSX.Element {
             Object.keys(dataFilter[SBSectionName]).length > 0 ? (
               <>
                 <DisclosureComponent
-                  openDisc={
+                  defaultOpen={
                     getFilterEdge.length !== 0 || search.length !== 0
                       ? true
                       : false
@@ -359,8 +359,8 @@ export default function ExtraSidebar(): JSX.Element {
             ),
           )}{" "}
         <ParentDisclosureComponent
-          openDisc={false}
-          key={"Advanced"}
+          defaultOpen={search.length !== 0 || getFilterEdge.length !== 0}
+          key={`${search.length !== 0}-${getFilterEdge.length !== 0}-Advanced`}
           button={{
             title: "Advanced",
             Icon: nodeIconsLucide.unknown,
@@ -375,7 +375,7 @@ export default function ExtraSidebar(): JSX.Element {
                 <>
                   <DisclosureComponent
                     isChild={false}
-                    openDisc={
+                    defaultOpen={
                       getFilterEdge.length !== 0 || search.length !== 0
                         ? true
                         : false

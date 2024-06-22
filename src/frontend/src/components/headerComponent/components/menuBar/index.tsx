@@ -9,14 +9,16 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { UPLOAD_ERROR_ALERT } from "../../../../constants/alerts_constants";
-import { IS_MAC, SAVED_HOVER } from "../../../../constants/constants";
+import { SAVED_HOVER } from "../../../../constants/constants";
 import ExportModal from "../../../../modals/exportModal";
 import FlowLogsModal from "../../../../modals/flowLogsModal";
 import FlowSettingsModal from "../../../../modals/flowSettingsModal";
+import ToolbarSelectItem from "../../../../pages/FlowPage/components/nodeToolbarComponent/toolbarSelectItem";
 import useAlertStore from "../../../../stores/alertStore";
 import useFlowStore from "../../../../stores/flowStore";
 import useFlowsManagerStore from "../../../../stores/flowsManagerStore";
 import { useShortcutsStore } from "../../../../stores/shortcuts";
+import { useTypesStore } from "../../../../stores/typesStore";
 import { cn } from "../../../../utils/utils";
 import IconComponent from "../../../genericIconComponent";
 import ShadTooltip from "../../../shadTooltipComponent";
@@ -36,6 +38,7 @@ export const MenuBar = ({}: {}): JSX.Element => {
   const uploadFlow = useFlowsManagerStore((state) => state.uploadFlow);
   const navigate = useNavigate();
   const isBuilding = useFlowStore((state) => state.isBuilding);
+  const getTypes = useTypesStore((state) => state.getTypes);
 
   function handleAddFlow() {
     try {
@@ -45,6 +48,12 @@ export const MenuBar = ({}: {}): JSX.Element => {
     } catch (err) {
       setErrorData(err as { title: string; list?: Array<string> });
     }
+  }
+
+  function handleReloadComponents() {
+    getTypes(true).then(() => {
+      setSuccessData({ title: "Components reloaded successfully" });
+    });
   }
 
   function printByBuildStatus() {
@@ -134,21 +143,15 @@ export const MenuBar = ({}: {}): JSX.Element => {
               }}
               className="cursor-pointer"
             >
-              <IconComponent name="Undo" className="header-menu-options" />
-              Undo
-              {IS_MAC ? (
-                <IconComponent
-                  name="Command"
-                  className="absolute right-[1.15rem] top-[0.65em] h-3.5 w-3.5 stroke-2"
-                />
-              ) : (
-                <span className="absolute right-[1.15rem] top-[0.40em] stroke-2">
-                  {
-                    shortcuts.find((s) => s.name.toLowerCase() === "undo")
-                      ?.shortcut
-                  }
-                </span>
-              )}
+              <ToolbarSelectItem
+                value="Undo"
+                icon="Undo"
+                dataTestId=""
+                shortcut={
+                  shortcuts.find((s) => s.name.toLowerCase() === "undo")
+                    ?.shortcut!
+                }
+              />
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -156,21 +159,27 @@ export const MenuBar = ({}: {}): JSX.Element => {
               }}
               className="cursor-pointer"
             >
-              <IconComponent name="Redo" className="header-menu-options" />
-              Redo
-              {IS_MAC ? (
-                <IconComponent
-                  name="Command"
-                  className="absolute right-[1.15rem] top-[0.65em] h-3.5 w-3.5 stroke-2"
-                />
-              ) : (
-                <span className="absolute right-[1.15rem] top-[0.40em] stroke-2">
-                  {
-                    shortcuts.find((s) => s.name.toLowerCase() === "redo")
-                      ?.shortcut
-                  }
-                </span>
-              )}
+              <ToolbarSelectItem
+                value="Redo"
+                icon="Redo"
+                dataTestId=""
+                shortcut={
+                  shortcuts.find((s) => s.name.toLowerCase() === "redo")
+                    ?.shortcut!
+                }
+              />
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                handleReloadComponents();
+              }}
+              className="cursor-pointer"
+            >
+              <IconComponent
+                name="RefreshCcw"
+                className="header-menu-options"
+              />
+              Refresh All
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -34,10 +34,13 @@ import {
 /**
  * Fetches all objects from the API endpoint.
  *
+ * @param {boolean} force_refresh - Whether to force a refresh of the data.
  * @returns {Promise<AxiosResponse<APIObjectType>>} A promise that resolves to an AxiosResponse containing all the objects.
  */
-export async function getAll(): Promise<AxiosResponse<APIObjectType>> {
-  return await api.get(`${BASE_URL_API}all`);
+export async function getAll(
+  force_refresh: boolean = true,
+): Promise<AxiosResponse<APIObjectType>> {
+  return await api.get(`${BASE_URL_API}all?force_refresh=${force_refresh}`);
 }
 
 const GITHUB_API_URL = "https://api.github.com";
@@ -124,6 +127,7 @@ export async function saveFlowToDatabase(newFlow: {
   style?: FlowStyleType;
   is_component?: boolean;
   folder_id?: string;
+  endpoint_name?: string;
 }): Promise<FlowType> {
   try {
     const response = await api.post(`${BASE_URL_API}flows/`, {
@@ -132,6 +136,7 @@ export async function saveFlowToDatabase(newFlow: {
       description: newFlow.description,
       is_component: newFlow.is_component,
       folder_id: newFlow.folder_id === "" ? null : newFlow.folder_id,
+      endpoint_name: newFlow.endpoint_name,
     });
 
     if (response.status !== 201) {

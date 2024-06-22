@@ -49,8 +49,7 @@ export default function ProfilePictureChooserComponent({
                 {profilePictures[folder].map((path, idx) => (
                   <Button
                     ref={value === folder + "/" + path ? ref : undefined}
-                    size="none"
-                    variant="none"
+                    unstyled
                     onClick={() => onChange(folder + "/" + path)}
                     className="shrink-0 px-0.5 py-2"
                   >

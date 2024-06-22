@@ -5,7 +5,6 @@ import path from "path";
 
 test("user must interact with chat with Input/Output", async ({ page }) => {
   if (!process.env.CI) {
-    dotenv.config();
     dotenv.config({ path: path.resolve(__dirname, "../../.env") });
   }
 
@@ -68,12 +67,17 @@ test("user must interact with chat with Input/Output", async ({ page }) => {
   await page.getByTestId("showsender_name").click();
   await page.getByText("Save Changes", { exact: true }).click();
 
+  await page.getByText("Chat Output", { exact: true }).click();
+  await page.getByTestId("advanced-button-modal").click();
+  await page.getByTestId("showsender_name").click();
+  await page.getByText("Save Changes", { exact: true }).click();
+
   await page
-    .getByTestId("popover-anchor-input-sender_name")
+    .getByTestId("textarea-sender_name")
     .nth(1)
     .fill("TestSenderNameUser");
   await page
-    .getByTestId("popover-anchor-input-sender_name")
+    .getByTestId("textarea-sender_name")
     .nth(0)
     .fill("TestSenderNameAI");
 
@@ -102,7 +106,6 @@ test("user must interact with chat with Input/Output", async ({ page }) => {
 
 test("user must be able to see output inspection", async ({ page }) => {
   if (!process.env.CI) {
-    dotenv.config();
     dotenv.config({ path: path.resolve(__dirname, "../../.env") });
   }
 
@@ -145,9 +148,9 @@ test("user must be able to see output inspection", async ({ page }) => {
 
   await page.getByTestId("button_run_chat output").last().click();
 
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(5000);
 
-  await page.getByTestId("icon-ScanEye").last().click();
+  await page.getByTestId("icon-ScanEye").nth(4).click();
 
   await page.getByText("Sender", { exact: true }).isVisible();
   await page.getByText("Type", { exact: true }).isVisible();
@@ -156,7 +159,6 @@ test("user must be able to see output inspection", async ({ page }) => {
 
 test("user must be able to send an image on chat", async ({ page }) => {
   if (!process.env.CI) {
-    dotenv.config();
     dotenv.config({ path: path.resolve(__dirname, "../../.env") });
   }
 
@@ -230,6 +232,6 @@ test("user must be able to send an image on chat", async ({ page }) => {
   await page.getByText("chain.png").isVisible();
 
   await page.getByText("Close", { exact: true }).click();
-  await page.getByTestId("icon-ScanEye").last().click();
+  await page.getByTestId("icon-ScanEye").nth(4).click();
   await page.getByText("Restart").isHidden();
 });

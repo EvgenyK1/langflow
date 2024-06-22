@@ -5,9 +5,11 @@ import { getVerticesOrder, postBuildVertex } from "../controllers/API";
 import useAlertStore from "../stores/alertStore";
 import useFlowStore from "../stores/flowStore";
 import { VertexBuildTypeAPI } from "../types/api";
+import { isErrorLogType } from "../types/utils/typeCheckingUtils";
 import { VertexLayerElementType } from "../types/zustand/flow";
 
 type BuildVerticesParams = {
+  setLockChat?: (lock: boolean) => void;
   flowId: string; // Assuming FlowType is the type for your flow
   input_value?: any; // Replace any with the actual type if it's not any
   files?: string[];
@@ -31,7 +33,7 @@ function getInactiveVertexData(vertexId: string): VertexBuildTypeAPI {
   // Build VertexBuildTypeAPI
   let inactiveData = {
     results: {},
-    logs: [],
+    outputs: {},
     messages: [],
     inactive: true,
   };
@@ -44,6 +46,9 @@ function getInactiveVertexData(vertexId: string): VertexBuildTypeAPI {
     top_level_vertices: [],
     inactive_vertices: null,
     valid: false,
+    params: null,
+    messages: [],
+    artifacts: null,
     timestamp: new Date().toISOString(),
   };
 
@@ -52,6 +57,7 @@ function getInactiveVertexData(vertexId: string): VertexBuildTypeAPI {
 
 export async function updateVerticesOrder(
   flowId: string,
+  setLockChat?: (lock: boolean) => void,
   startNodeId?: string | null,
   stopNodeId?: string | null,
   nodes?: Node[],
@@ -79,6 +85,7 @@ export async function updateVerticesOrder(
         list: [error.response?.data?.detail ?? "Unknown Error"],
       });
       useFlowStore.getState().setIsBuilding(false);
+      setLockChat && setLockChat(false);
       throw new Error("Invalid nodes");
     }
     // orderResponse.data.ids,
@@ -117,6 +124,7 @@ export async function buildVertices({
   onValidateNodes,
   nodes,
   edges,
+  setLockChat,
 }: BuildVerticesParams) {
   // if startNodeId and stopNodeId are provided
   // something is wrong
@@ -125,6 +133,7 @@ export async function buildVertices({
   }
   let verticesOrderResponse = await updateVerticesOrder(
     flowId,
+    setLockChat,
     startNodeId,
     stopNodeId,
     nodes,
@@ -135,7 +144,7 @@ export async function buildVertices({
       onValidateNodes(verticesOrderResponse.verticesToRun);
     } catch (e) {
       useFlowStore.getState().setIsBuilding(false);
-
+      setLockChat && setLockChat(false);
       return;
     }
   }
@@ -265,14 +274,30 @@ async function buildVertex({
     const buildData: VertexBuildTypeAPI = buildRes.data;
     if (onBuildUpdate) {
       if (!buildData.valid) {
+        // lots is a dictionary with the key the output field name and the value the log object
+        // logs: { [key: string]: { message: any; type: string }[] };
+        const errorMessages = Object.keys(buildData.data.outputs).map((key) => {
+          const outputs = buildData.data.outputs[key];
+          if (Array.isArray(outputs)) {
+            return outputs
+              .filter((log) => isErrorLogType(log.message))
+              .map((log) => log.message.errorMessage);
+          }
+          if (!isErrorLogType(outputs.message)) {
+            return [];
+          }
+          return [outputs.message.errorMessage];
+        });
         onBuildError!(
           "Error Building Component",
-          buildData.data.logs.map((log) => log.message),
+          errorMessages,
           verticesIds.map((id) => ({ id })),
         );
         stopBuild();
+        onBuildUpdate(buildData, BuildStatus.ERROR);
+      } else {
+        onBuildUpdate(buildData, BuildStatus.BUILT);
       }
-      onBuildUpdate(buildData, BuildStatus.BUILT);
     }
     buildResults.push(buildData.valid);
   } catch (error) {
@@ -285,6 +310,7 @@ async function buildVertex({
       ],
       verticesIds.map((id) => ({ id })),
     );
+    buildResults.push(false);
     stopBuild();
   }
 }

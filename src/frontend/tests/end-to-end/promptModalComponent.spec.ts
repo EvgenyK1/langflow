@@ -29,7 +29,7 @@ test("PromptTemplateComponent", async ({ page }) => {
   await page.waitForTimeout(1000);
 
   await page
-    .locator('//*[@id="inputsPrompt"]')
+    .locator('//*[@id="promptsPrompt"]')
     .dragTo(page.locator('//*[@id="react-flow-id"]'));
   await page.mouse.up();
   await page.mouse.down();

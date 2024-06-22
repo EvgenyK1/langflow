@@ -155,9 +155,11 @@ const useFlowsManagerStore = create<FlowsManagerStoreType>((set, get) => ({
           }
         })
         .catch((err) => {
+          useAlertStore.getState().setErrorData({
+            title: "Error while saving changes",
+            list: [(err as AxiosError).message],
+          });
           reject(err);
-          set({ saveLoading: false });
-          throw err;
         });
     });
   }, SAVE_DEBOUNCE_TIME),
@@ -197,11 +199,10 @@ const useFlowsManagerStore = create<FlowsManagerStoreType>((set, get) => ({
     position?: XYPosition,
     fromDragAndDrop?: boolean,
   ): Promise<string | undefined> => {
+    let flowData = flow
+      ? processDataFromFlow(flow)
+      : { nodes: [], edges: [], viewport: { zoom: 1, x: 0, y: 0 } };
     if (newProject) {
-      let flowData = flow
-        ? processDataFromFlow(flow)
-        : { nodes: [], edges: [], viewport: { zoom: 1, x: 0, y: 0 } };
-
       // Create a new flow with a default name if no flow is provided.
       const folder_id = useFolderStore.getState().folderUrl;
       const my_collection_id = useFolderStore.getState().myCollectionId;
@@ -261,8 +262,20 @@ const useFlowsManagerStore = create<FlowsManagerStoreType>((set, get) => ({
 
         // Return the id
         return id;
-      } catch (error) {
-        // Handle the error if needed
+      } catch (error: any) {
+        if (error.response?.data?.detail) {
+          useAlertStore.getState().setErrorData({
+            title: "Could not load flows from database",
+            list: [error.response?.data?.detail],
+          });
+        } else {
+          useAlertStore.getState().setErrorData({
+            title: "Could not load flows from database",
+            list: [
+              error.message ?? "An unexpected error occurred, please try again",
+            ],
+          });
+        }
         throw error; // Re-throw the error so the caller can handle it if needed
       }
     } else {

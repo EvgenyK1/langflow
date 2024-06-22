@@ -38,7 +38,6 @@ import {
   generateNodeFromFlow,
   getNodeId,
   isValidConnection,
-  reconnectEdges,
   scapeJSONParse,
   updateIds,
   validateSelection,
@@ -119,7 +118,7 @@ export default function Page({
         getRandomName(),
       );
       const newGroupNode = generateNodeFromFlow(newFlow, getNodeId);
-      const newEdges = reconnectEdges(newGroupNode, removedEdges);
+      // const newEdges = reconnectEdges(newGroupNode, removedEdges);
       setNodes([
         ...clonedNodes.filter(
           (oldNodes) =>
@@ -129,17 +128,17 @@ export default function Page({
         ),
         newGroupNode,
       ]);
-      setEdges([
-        ...clonedEdges.filter(
-          (oldEdge) =>
-            !clonedSelection!.nodes.some(
-              (selectionNode) =>
-                selectionNode.id === oldEdge.target ||
-                selectionNode.id === oldEdge.source,
-            ),
-        ),
-        ...newEdges,
-      ]);
+      // setEdges([
+      //   ...clonedEdges.filter(
+      //     (oldEdge) =>
+      //       !clonedSelection!.nodes.some(
+      //         (selectionNode) =>
+      //           selectionNode.id === oldEdge.target ||
+      //           selectionNode.id === oldEdge.source,
+      //       ),
+      //   ),
+      //   ...newEdges,
+      // ]);
     } else {
       setErrorData({
         title: INVALID_SELECTION_ERROR_ALERT,
@@ -194,9 +193,9 @@ export default function Page({
   }
 
   function handleGroup(e: KeyboardEvent) {
-    e.preventDefault();
-    (e as unknown as Event).stopImmediatePropagation();
     if (selectionMenuVisible) {
+      e.preventDefault();
+      (e as unknown as Event).stopImmediatePropagation();
       handleGroupNode();
     }
   }

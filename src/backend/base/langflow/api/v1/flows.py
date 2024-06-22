@@ -43,13 +43,33 @@ def create_flow(
         # based on the highest number found
         if session.exec(select(Flow).where(Flow.name == flow.name).where(Flow.user_id == current_user.id)).first():
             flows = session.exec(
-                select(Flow).where(Flow.name.like(f"{flow.name} (%")).where(Flow.user_id == current_user.id)
+                select(Flow).where(Flow.name.like(f"{flow.name} (%")).where(Flow.user_id == current_user.id)  # type: ignore
             ).all()
             if flows:
                 numbers = [int(flow.name.split("(")[1].split(")")[0]) for flow in flows]
                 flow.name = f"{flow.name} ({max(numbers) + 1})"
             else:
                 flow.name = f"{flow.name} (1)"
+        # Now check if the endpoint is unique
+        if (
+            flow.endpoint_name
+            and session.exec(
+                select(Flow).where(Flow.endpoint_name == flow.endpoint_name).where(Flow.user_id == current_user.id)
+            ).first()
+        ):
+            flows = session.exec(
+                select(Flow)
+                .where(Flow.endpoint_name.like(f"{flow.endpoint_name}-%"))  # type: ignore
+                .where(Flow.user_id == current_user.id)
+            ).all()
+            if flows:
+                # The endpoitn name is like "my-endpoint","my-endpoint-1", "my-endpoint-2"
+                # so we need to get the highest number and add 1
+                # we need to get the last part of the endpoint name
+                numbers = [int(flow.endpoint_name.split("-")[-1]) for flow in flows]  # type: ignore
+                flow.endpoint_name = f"{flow.endpoint_name}-{max(numbers) + 1}"
+            else:
+                flow.endpoint_name = f"{flow.endpoint_name}-1"
 
         db_flow = Flow.model_validate(flow, from_attributes=True)
         db_flow.updated_at = datetime.now(timezone.utc)

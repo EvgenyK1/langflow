@@ -28,7 +28,7 @@ test("InputListComponent", async ({ page }) => {
 
   await page.waitForTimeout(1000);
   await page
-    .getByTestId("vectorstoresAstra DB")
+    .getByTestId("vectorsearchAstra DB Search")
     .dragTo(page.locator('//*[@id="react-flow-id"]'));
   await page.mouse.up();
   await page.mouse.down();
@@ -89,7 +89,7 @@ test("InputListComponent", async ({ page }) => {
   }
 
   await page
-    .getByTestId("input-list-minus-btn_metadata_indexing_include-0")
+    .getByTestId("input-list-minus-btn_metadata_indexing_include-1")
     .click();
 
   const plusButtonLocator = page.getByTestId(
@@ -105,13 +105,13 @@ test("InputListComponent", async ({ page }) => {
     .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-1")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-2")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
   await page
-    .getByTestId("input-list-plus-btn_metadata_indexing_include-3")
+    .getByTestId("input-list-plus-btn_metadata_indexing_include-0")
     .click();
 
   await page
@@ -154,7 +154,7 @@ test("InputListComponent", async ({ page }) => {
   }
 
   await page
-    .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-0")
+    .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-1")
     .click();
   await page
     .getByTestId("input-list-minus-btn-edit_metadata_indexing_include-1")
@@ -173,7 +173,7 @@ test("InputListComponent", async ({ page }) => {
   );
   const elementCountEdit2 = await plusButtonLocatorEdit2?.count();
 
-  if (elementCountEdit0 > 0 || elementCountEdit2 > 0) {
+  if (elementCountEdit0 > 1 || elementCountEdit2 > 0) {
     expect(false).toBeTruthy();
   }
 
@@ -189,7 +189,7 @@ test("InputListComponent", async ({ page }) => {
 
   const elementCountMinusEdit2 = await minusButtonLocatorEdit2?.count();
 
-  if (elementCountMinusEdit1 > 0 || elementCountMinusEdit2 > 0) {
+  if (elementCountMinusEdit1 > 1 || elementCountMinusEdit2 > 0) {
     expect(false).toBeTruthy();
   }
 });

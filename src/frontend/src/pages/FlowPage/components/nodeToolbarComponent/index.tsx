@@ -38,12 +38,13 @@ export default function NodeToolbarComponent({
   deleteNode,
   setShowNode,
   numberOfHandles,
+  numberOfOutputHandles,
   showNode,
   name = "code",
-  selected,
   setShowState,
   onCloseAdvancedModal,
   updateNode,
+  isOutdated,
 }: nodeToolbarPropsType): JSX.Element {
   const version = useDarkStore((state) => state.version);
   const [showModalAdvanced, setShowModalAdvanced] = useState(false);
@@ -89,13 +90,6 @@ export default function NodeToolbarComponent({
     return;
   }
 
-  function handleUpdateWShortcut(e: KeyboardEvent) {
-    e.preventDefault();
-    if (hasApiKey || hasStore) {
-      handleSelectChange("update");
-    }
-  }
-
   function handleGroupWShortcut(e: KeyboardEvent) {
     e.preventDefault();
     if (isGroup) {
@@ -121,9 +115,7 @@ export default function NodeToolbarComponent({
   function handleAdvancedWShortcut(e: KeyboardEvent) {
     e.preventDefault();
     if (isThereModal() && !showModalAdvanced) return;
-    if (!isGroup) {
-      setShowModalAdvanced((state) => !state);
-    }
+    setShowModalAdvanced((state) => !state);
   }
 
   function handleSaveWShortcut(e: KeyboardEvent) {
@@ -157,6 +149,7 @@ export default function NodeToolbarComponent({
 
   function handleFreeze(e: KeyboardEvent) {
     e.preventDefault();
+    if (data.node?.flow) return;
     setNode(data.id, (old) => ({
       ...old,
       data: {
@@ -189,7 +182,7 @@ export default function NodeToolbarComponent({
   useHotkeys(download, handleDownloadWShortcut, { preventDefault });
   useHotkeys(freeze, handleFreeze, { preventDefault });
 
-  const isMinimal = numberOfHandles <= 1;
+  const isMinimal = numberOfHandles <= 1 && numberOfOutputHandles <= 1;
   const isGroup = data.node?.flow ? true : false;
 
   const frozen = data.node?.frozen ?? false;
@@ -247,6 +240,7 @@ export default function NodeToolbarComponent({
         saveComponent(cloneDeep(data), false);
         break;
       case "freeze":
+        if (data.node?.flow) return;
         setNode(data.id, (old) => ({
           ...old,
           data: {
@@ -295,6 +289,7 @@ export default function NodeToolbarComponent({
           edges,
           setNodes,
           setEdges,
+          data.node?.outputs,
         );
         break;
       case "override":
@@ -483,42 +478,44 @@ export default function NodeToolbarComponent({
               <IconComponent name="SaveAll" className="h-4 w-4" />
             </button>
           </ShadTooltip>*/}
-          <ShadTooltip
-            content={displayShortcut(
-              shortcuts.find(
-                ({ name }) => name.split(" ")[0].toLowerCase() === "freeze",
-              )!,
-            )}
-            side="top"
-          >
-            <button
-              className={classNames(
-                "relative -ml-px inline-flex items-center bg-background px-2 py-2 text-foreground shadow-md ring-1 ring-inset ring-ring transition-all duration-500 ease-in-out hover:bg-muted focus:z-10",
+          {!data.node?.flow && (
+            <ShadTooltip
+              content={displayShortcut(
+                shortcuts.find(
+                  ({ name }) => name.split(" ")[0].toLowerCase() === "freeze",
+                )!,
               )}
-              onClick={(event) => {
-                event.preventDefault();
-                setNode(data.id, (old) => ({
-                  ...old,
-                  data: {
-                    ...old.data,
-                    node: {
-                      ...old.data.node,
-                      frozen: old.data?.node?.frozen ? false : true,
-                    },
-                  },
-                }));
-              }}
+              side="top"
             >
-              <IconComponent
-                name="Snowflake"
-                className={cn(
-                  "h-4 w-4 transition-all",
-                  // TODO UPDATE THIS COLOR TO BE A VARIABLE
-                  frozen ? "animate-wiggle text-ice" : "",
+              <button
+                className={classNames(
+                  "relative -ml-px inline-flex items-center bg-background px-2 py-2 text-foreground shadow-md ring-1 ring-inset ring-ring transition-all duration-500 ease-in-out hover:bg-muted focus:z-10",
                 )}
-              />
-            </button>
-          </ShadTooltip>
+                onClick={(event) => {
+                  event.preventDefault();
+                  setNode(data.id, (old) => ({
+                    ...old,
+                    data: {
+                      ...old.data,
+                      node: {
+                        ...old.data.node,
+                        frozen: old.data?.node?.frozen ? false : true,
+                      },
+                    },
+                  }));
+                }}
+              >
+                <IconComponent
+                  name="Snowflake"
+                  className={cn(
+                    "h-4 w-4 transition-all",
+                    // TODO UPDATE THIS COLOR TO BE A VARIABLE
+                    frozen ? "animate-wiggle text-ice" : "",
+                  )}
+                />
+              </button>
+            </ShadTooltip>
+          )}
 
           {/*<ShadTooltip content={"Duplicate"} side="top">
             <button
@@ -609,6 +606,18 @@ export default function NodeToolbarComponent({
                   dataTestId="copy-button-modal"
                 />
               </SelectItem>
+              {isOutdated && (
+                <SelectItem value={"update"}>
+                  <ToolbarSelectItem
+                    shortcut={
+                      shortcuts.find((obj) => obj.name === "Update")?.shortcut!
+                    }
+                    value={"Restore"}
+                    icon={"RefreshCcwDot"}
+                    dataTestId="update-button-modal"
+                  />
+                </SelectItem>
+              )}
               {hasStore && (
                 <SelectItem
                   value={"Share"}
@@ -676,30 +685,29 @@ export default function NodeToolbarComponent({
                   />
                 </SelectItem>
               )}
-              <SelectItem value="freeze">
-                <ToolbarSelectItem
-                  shortcut={
-                    shortcuts.find((obj) => obj.name === "Freeze")?.shortcut!
-                  }
-                  value={"Freeze"}
-                  icon={"Snowflake"}
-                  dataTestId="group-button-modal"
-                  style={`${frozen ? " text-ice" : ""} transition-all`}
-                />
-              </SelectItem>
-              {(!hasStore || !hasApiKey || !validApiKey) && (
-                <SelectItem value="Download">
+              {!data.node?.flow && (
+                <SelectItem value="freeze">
                   <ToolbarSelectItem
                     shortcut={
-                      shortcuts.find((obj) => obj.name === "Download")
-                        ?.shortcut!
+                      shortcuts.find((obj) => obj.name === "Freeze")?.shortcut!
                     }
-                    value={"Download"}
-                    icon={"Download"}
-                    dataTestId="download-button-modal"
+                    value={"Freeze"}
+                    icon={"Snowflake"}
+                    dataTestId="group-button-modal"
+                    style={`${frozen ? " text-ice" : ""} transition-all`}
                   />
                 </SelectItem>
               )}
+              <SelectItem value="Download">
+                <ToolbarSelectItem
+                  shortcut={
+                    shortcuts.find((obj) => obj.name === "Download")?.shortcut!
+                  }
+                  value={"Download"}
+                  icon={"Download"}
+                  dataTestId="download-button-modal"
+                />
+              </SelectItem>
               <SelectItem
                 value={"delete"}
                 className="focus:bg-red-400/[.20]"

@@ -32,8 +32,6 @@ export default function FileCard({
     BACKEND_URL.length - 1,
   )}${BASE_URL_API}files/images/${content}`;
 
-  console.log(imgSrc);
-
   if (showFile) {
     if (imgTypes.has(fileType)) {
       return (
